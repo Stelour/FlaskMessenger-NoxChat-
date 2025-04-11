@@ -1,8 +1,16 @@
 {% extends "base.html" %}
+
 {% block content %}
-  <div style="max-width: 800px; margin: auto; text-align: center; padding: 20px;">
-    <h1>Welcome to NoxChat!</h1>
-    <p>Hello, {{ user.username }}!</p>
-    <p>{{ welcome_message }}</p>
-  </div>
+    <div class="welcome-container">
+        <h1>{{ welcome_message }}</h1>
+        
+        <div class="tips-container">
+            <h3>Что нового:</h3>
+            <ul>
+                {% for tip in tips %}
+                <li>{{ tip }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
 {% endblock %}
