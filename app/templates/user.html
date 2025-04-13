@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <table>
+        <tr valign="top">
+            <td>
+                <img src="{{ url_for('static', filename='avatars/' ~ user.profile.avatar_path) }}" width="128">
+            </td>
+            <td>
+                <h1>User: {{ user.username }}</h1>
+                
+                {% if user.profile.bio %}
+                    <p>Bio: {{ user.profile.bio }}</p>
+                {% endif %}
+                
+                {% if user.profile.public_id %}
+                    <p>ID: {{ user.profile.public_id }}</p>
+                {% endif %}
+
+                {% if user.profile.last_seen %}
+                    <p>Last seen on: {{ user.profile.last_seen.strftime('%A, %d %B %Y %H:%M:%S') }}</p>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+    {% if user == current_user %}
+        <p><a href="{{ url_for('edit_profile') }}">Edit your profile</a></p>
+    {% endif %}
+    <hr>
+{% endblock %}

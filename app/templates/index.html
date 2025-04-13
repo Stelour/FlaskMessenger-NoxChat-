@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="welcome-container">
+    <div>
         <h1>{{ welcome_message }}</h1>
         
-        <div class="tips-container">
-            <h3>Что нового:</h3>
+        <div>
+            <h3>What is new?</h3>
             <ul>
                 {% for tip in tips %}
                 <li>{{ tip }}</li>
