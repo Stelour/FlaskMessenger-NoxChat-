@@ -40,3 +40,20 @@ class EditProfileForm(FlaskForm):
     public_id = StringField('Public ID', validators=[DataRequired()])
     avatar = FileField('Update Avatar', validators=[FileAllowed(['jpg', 'png'], 'Images only!')])
     submit = SubmitField('Submit')
+    
+    def __init__(self, original_username, original_public_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.original_username = original_username
+        self.original_public_id = original_public_id
+
+    def validate_username(self, username):
+        if username.data != self.original_username:
+            user = db.session.scalar(sa.select(User).where(User.username == username.data))
+            if user is not None:
+                raise ValidationError('Please use a different username.')
+
+    def validate_public_id(self, public_id):
+        if public_id.data != self.original_public_id:
+            profile = db.session.scalar(sa.select(Profile).where(Profile.public_id == public_id.data))
+            if profile is not None:
+                raise ValidationError('This Public ID is already in use.')

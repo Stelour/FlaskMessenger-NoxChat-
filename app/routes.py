@@ -89,7 +89,7 @@ def before_request():
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
-    form = EditProfileForm()
+    form = EditProfileForm(original_username=current_user.username, original_public_id=current_user.profile.public_id)
     if form.validate_on_submit():
         new_public_id = form.public_id.data.lower()
         old_public_id = current_user.profile.public_id
