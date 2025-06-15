@@ -57,3 +57,6 @@ class EditProfileForm(FlaskForm):
             profile = db.session.scalar(sa.select(Profile).where(Profile.public_id == public_id.data))
             if profile is not None:
                 raise ValidationError('This Public ID is already in use.')
+
+class EmptyForm(FlaskForm):
+    submit = SubmitField('Submit')

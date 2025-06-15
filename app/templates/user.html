@@ -20,6 +20,24 @@
                 {% if user.profile.last_seen %}
                     <p>Last seen on: {{ user.profile.last_seen.strftime('%A, %d %B %Y %H:%M:%S') }}</p>
                 {% endif %}
+                
+                <p>{{ user.followers_count() }} followers, {{ user.following_count() }} following.</p>
+                {% if user == current_user %}
+                {% elif not current_user.is_following(user) %}
+                <p>
+                    <form action="{{ url_for('follow', public_id=user.profile.public_id) }}" method="post">
+                        {{ form.hidden_tag() }}
+                        {{ form.submit(value='Follow') }}
+                    </form>
+                </p>
+                {% else %}
+                <p>
+                    <form action="{{ url_for('unfollow', public_id=user.profile.public_id) }}" method="post">
+                        {{ form.hidden_tag() }}
+                        {{ form.submit(value='Unfollow') }}
+                    </form>
+                </p>
+                {% endif %}
             </td>
         </tr>
     </table>

@@ -13,6 +13,7 @@ from app.forms import RegistrationForm
 from datetime import datetime, timezone
 from app.forms import EditProfileForm
 from app.avatar_utils import save_avatar, rename_avatar_directory, clear_old_avatars
+from app.forms import EmptyForm
 
 @app.route('/')
 @app.route('/index')
@@ -78,7 +79,8 @@ def user(public_id):
     user = db.first_or_404(
         sa.select(User).join(Profile).where(Profile.public_id == public_id)
     )
-    return render_template('user.html', user=user)
+    form = EmptyForm()
+    return render_template('user.html', user=user, form=form)
 
 @app.before_request
 def before_request():
@@ -89,7 +91,10 @@ def before_request():
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
-    form = EditProfileForm(original_username=current_user.username, original_public_id=current_user.profile.public_id)
+    form = EditProfileForm(
+        original_username=current_user.username, 
+        original_public_id=current_user.profile.public_id
+        )
     if form.validate_on_submit():
         new_public_id = form.public_id.data.lower()
         old_public_id = current_user.profile.public_id
@@ -116,3 +121,43 @@ def edit_profile():
         form.public_id.data = current_user.profile.public_id
 
     return render_template('edit_profile.html', title='Edit Profile', form=form)
+
+@app.route('/follow/<public_id>', methods=['POST'])
+@login_required
+def follow(public_id):
+    form = EmptyForm()
+    if form.validate_on_submit():
+        user = db.session.scalar(
+            sa.select(User).join(Profile).where(Profile.public_id == public_id)
+        )
+        if user is None:
+            flash(f'User {public_id} not found.')
+            return redirect(url_for('index'))
+        if user == current_user:
+            flash('You cannot follow yourself!')
+            return redirect(url_for('user', public_id=user.profile.public_id))
+        current_user.follow(user)
+        db.session.commit()
+        flash(f'You are following {public_id}!')
+        return redirect(url_for('user', public_id=user.profile.public_id))
+    return redirect(url_for('index'))
+
+@app.route('/unfollow/<public_id>', methods=['POST'])
+@login_required
+def unfollow(public_id):
+    form = EmptyForm()
+    if form.validate_on_submit():
+        user = db.session.scalar(
+            sa.select(User).join(Profile).where(Profile.public_id == public_id)
+        )
+        if user is None:
+            flash(f'User {public_id} not found.')
+            return redirect(url_for('index'))
+        if user == current_user:
+            flash('You cannot unfollow yourself!')
+            return redirect(url_for('user', public_id=user.profile.public_id))
+        current_user.unfollow(user)
+        db.session.commit()
+        flash(f'You are not following {public_id}.')
+        return redirect(url_for('user', public_id=user.profile.public_id))
+    return redirect(url_for('index'))
