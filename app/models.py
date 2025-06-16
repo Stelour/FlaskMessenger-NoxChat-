@@ -7,13 +7,18 @@ import sqlalchemy.orm as so
 from app import db
 from app import login
 
-followers = sa.Table(
-    'followers',
+friends_table = sa.Table(
+    'friends',
     db.metadata,
-    sa.Column('follower_id', sa.Integer, sa.ForeignKey('user.id'),
-              primary_key=True),
-    sa.Column('followed_id', sa.Integer, sa.ForeignKey('user.id'),
-              primary_key=True)
+    sa.Column('user_id', sa.Integer, sa.ForeignKey('user.id'), primary_key=True),
+    sa.Column('friend_id', sa.Integer, sa.ForeignKey('user.id'), primary_key=True)
+)
+
+friend_requests = sa.Table(
+    'friend_requests',
+    db.metadata,
+    sa.Column('sender_id', sa.Integer, sa.ForeignKey('user.id'), primary_key=True),
+    sa.Column('receiver_id', sa.Integer, sa.ForeignKey('user.id'), primary_key=True)
 )
 
 class User(UserMixin, db.Model):
@@ -33,36 +38,90 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User {}>'.format(self.username)
     
-    following: so.WriteOnlyMapped['User'] = so.relationship(
-        secondary=followers, primaryjoin=(followers.c.follower_id == id),
-        secondaryjoin=(followers.c.followed_id == id),
-        back_populates='followers')
-    
-    followers: so.WriteOnlyMapped['User'] = so.relationship(
-        secondary=followers, primaryjoin=(followers.c.followed_id == id),
-        secondaryjoin=(followers.c.follower_id == id),
-        back_populates='following')
-    
-    def follow(self, user):
-        if not self.is_following(user):
-            self.following.add(user)
+    friends: so.WriteOnlyMapped['User'] = so.relationship(
+        secondary=friends_table,
+        primaryjoin=(friends_table.c.user_id == id),
+        secondaryjoin=(friends_table.c.friend_id == id)
+    )
 
-    def unfollow(self, user):
-        if self.is_following(user):
-            self.following.remove(user)
+    sent_requests: so.WriteOnlyMapped['User'] = so.relationship(
+        'User',
+        secondary=friend_requests,
+        primaryjoin=(friend_requests.c.sender_id == id),
+        secondaryjoin=(friend_requests.c.receiver_id == id),
+        back_populates='received_requests'
+    )
 
-    def is_following(self, user):
-        query = self.following.select().where(User.id == user.id)
+    received_requests: so.WriteOnlyMapped['User'] = so.relationship(
+        'User',
+        secondary=friend_requests,
+        primaryjoin=(friend_requests.c.receiver_id == id),
+        secondaryjoin=(friend_requests.c.sender_id == id),
+        back_populates='sent_requests'
+    )
+    
+    def add_friend(self, user):
+        if not self.is_friend(user) and user != self:
+            self.friends.add(user)
+            user.friends.add(self)
+
+    def remove_friend(self, user):
+        if self.is_friend(user):
+            self.friends.remove(user)
+            user.friends.remove(self)
+
+    def is_friend(self, user):
+        query = self.friends.select().where(User.id == user.id)
         return db.session.scalar(query) is not None
 
-    def followers_count(self):
+    def send_friend_request(self, user):
+        if user == self or self.is_friend(user):
+            return 'none'
+        if self.received_request_from(user):
+            self.accept_friend_request(user)
+            return 'accepted'
+        if not self.sent_request_to(user):
+            self.sent_requests.add(user)
+            return 'sent'
+        return 'none'
+
+    def cancel_friend_request(self, user):
+        if self.sent_request_to(user):
+            self.sent_requests.remove(user)
+
+    def accept_friend_request(self, user):
+        if self.received_request_from(user):
+            self.received_requests.remove(user)
+            self.add_friend(user)
+
+    def decline_friend_request(self, user):
+        if self.received_request_from(user):
+            self.received_requests.remove(user)
+
+    def sent_request_to(self, user):
+        query = self.sent_requests.select().where(User.id == user.id)
+        return db.session.scalar(query) is not None
+
+    def received_request_from(self, user):
+        query = self.received_requests.select().where(User.id == user.id)
+        return db.session.scalar(query) is not None
+
+    def has_pending_request(self, user):
+        return self.sent_request_to(user) or self.received_request_from(user)
+
+    def outgoing_requests_count(self):
         query = sa.select(sa.func.count()).select_from(
-            self.followers.select().subquery())
+            self.sent_requests.select().subquery())
         return db.session.scalar(query)
 
-    def following_count(self):
+    def incoming_requests_count(self):
         query = sa.select(sa.func.count()).select_from(
-            self.following.select().subquery())
+            self.received_requests.select().subquery())
+        return db.session.scalar(query)
+
+    def friends_count(self):
+        query = sa.select(sa.func.count()).select_from(
+            self.friends.select().subquery())
         return db.session.scalar(query)
 
 class Profile(db.Model):

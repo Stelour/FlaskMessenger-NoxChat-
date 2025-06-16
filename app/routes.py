@@ -14,16 +14,19 @@ from datetime import datetime, timezone
 from app.forms import EditProfileForm
 from app.avatar_utils import save_avatar, rename_avatar_directory, clear_old_avatars
 from app.forms import EmptyForm
+from app.updates import updates
 
 @app.route('/')
 @app.route('/index')
 @login_required
 def index():
     welcome_message = f"Welcome to NoxChat, {current_user.username}! "
-    tips = [
-        "Nothing new, but follow the updates!"
-    ]
-    return render_template("index.html", title='NoxChat', welcome_message=welcome_message, tips=tips)
+    sorted_updates = sorted(updates, key=lambda u: u['date'], reverse=True)
+    return render_template(
+        "index.html", 
+        title='NoxChat', 
+        welcome_message=welcome_message, 
+        updates=sorted_updates,)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -122,9 +125,9 @@ def edit_profile():
 
     return render_template('edit_profile.html', title='Edit Profile', form=form)
 
-@app.route('/follow/<public_id>', methods=['POST'])
+@app.route('/send_request/<public_id>', methods=['POST'])
 @login_required
-def follow(public_id):
+def send_request(public_id):
     form = EmptyForm()
     if form.validate_on_submit():
         user = db.session.scalar(
@@ -134,17 +137,20 @@ def follow(public_id):
             flash(f'User {public_id} not found.')
             return redirect(url_for('index'))
         if user == current_user:
-            flash('You cannot follow yourself!')
+            flash('You cannot add yourself as a friend!')
             return redirect(url_for('user', public_id=user.profile.public_id))
-        current_user.follow(user)
+        result = current_user.send_friend_request(user)
         db.session.commit()
-        flash(f'You are following {public_id}!')
+        if result == 'accepted':
+            flash(f'You are now friends with {public_id}.')
+        elif result == 'sent':
+            flash(f'Friend request sent to {public_id}.')
         return redirect(url_for('user', public_id=user.profile.public_id))
     return redirect(url_for('index'))
 
-@app.route('/unfollow/<public_id>', methods=['POST'])
+@app.route('/remove_friend/<public_id>', methods=['POST'])
 @login_required
-def unfollow(public_id):
+def remove_friend(public_id):
     form = EmptyForm()
     if form.validate_on_submit():
         user = db.session.scalar(
@@ -154,10 +160,61 @@ def unfollow(public_id):
             flash(f'User {public_id} not found.')
             return redirect(url_for('index'))
         if user == current_user:
-            flash('You cannot unfollow yourself!')
+            flash('You cannot remove yourself!')
             return redirect(url_for('user', public_id=user.profile.public_id))
-        current_user.unfollow(user)
+        current_user.remove_friend(user)
         db.session.commit()
-        flash(f'You are not following {public_id}.')
+        flash(f'You are no longer friends with {public_id}.')
+        return redirect(url_for('user', public_id=user.profile.public_id))
+    return redirect(url_for('index'))
+
+@app.route('/accept_request/<public_id>', methods=['POST'])
+@login_required
+def accept_request(public_id):
+    form = EmptyForm()
+    if form.validate_on_submit():
+        user = db.session.scalar(
+            sa.select(User).join(Profile).where(Profile.public_id == public_id)
+        )
+        if user is None:
+            flash(f'User {public_id} not found.')
+            return redirect(url_for('index'))
+        current_user.accept_friend_request(user)
+        db.session.commit()
+        flash(f'Friend request from {public_id} accepted.')
+        return redirect(url_for('user', public_id=user.profile.public_id))
+    return redirect(url_for('index'))
+
+@app.route('/decline_request/<public_id>', methods=['POST'])
+@login_required
+def decline_request(public_id):
+    form = EmptyForm()
+    if form.validate_on_submit():
+        user = db.session.scalar(
+            sa.select(User).join(Profile).where(Profile.public_id == public_id)
+        )
+        if user is None:
+            flash(f'User {public_id} not found.')
+            return redirect(url_for('index'))
+        current_user.decline_friend_request(user)
+        db.session.commit()
+        flash(f'Friend request from {public_id} declined.')
+        return redirect(url_for('user', public_id=user.profile.public_id))
+    return redirect(url_for('index'))
+
+@app.route('/cancel_request/<public_id>', methods=['POST'])
+@login_required
+def cancel_request(public_id):
+    form = EmptyForm()
+    if form.validate_on_submit():
+        user = db.session.scalar(
+            sa.select(User).join(Profile).where(Profile.public_id == public_id)
+        )
+        if user is None:
+            flash(f'User {public_id} not found.')
+            return redirect(url_for('index'))
+        current_user.cancel_friend_request(user)
+        db.session.commit()
+        flash(f'Friend request to {public_id} canceled.')
         return redirect(url_for('user', public_id=user.profile.public_id))
     return redirect(url_for('index'))
