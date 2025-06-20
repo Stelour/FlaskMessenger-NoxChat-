@@ -60,3 +60,7 @@ class EditProfileForm(FlaskForm):
 
 class EmptyForm(FlaskForm):
     submit = SubmitField('Submit')
+
+class SearchUserForm(FlaskForm):
+    search_user = StringField('Username or ID', validators=[DataRequired()])
+    submit = SubmitField('Submit')

@@ -15,6 +15,7 @@ from app.forms import EditProfileForm
 from app.avatar_utils import save_avatar, rename_avatar_directory, clear_old_avatars
 from app.forms import EmptyForm
 from app.updates import updates
+from app.forms import SearchUserForm
 
 @app.route('/')
 @app.route('/index')
@@ -83,7 +84,7 @@ def user(public_id):
         sa.select(User).join(Profile).where(Profile.public_id == public_id)
     )
     form = EmptyForm()
-    return render_template('user.html', user=user, form=form)
+    return render_template('user.html', title='Profile', user=user, form=form)
 
 @app.before_request
 def before_request():
@@ -218,3 +219,25 @@ def cancel_request(public_id):
         flash(f'Friend request to {public_id} canceled.')
         return redirect(url_for('user', public_id=user.profile.public_id))
     return redirect(url_for('index'))
+
+@app.route('/search', methods=['GET', 'POST'])
+@login_required
+def search_user():
+    form = SearchUserForm()
+    results = None
+    
+    if form.validate_on_submit():
+        query = form.search_user.data
+        stmt = (
+            sa.select(User)
+            .join(Profile)
+            .where(
+                sa.or_(
+                    User.username.ilike(f"%{query}%"),
+                    Profile.public_id.ilike(f"%{query}%")
+                )
+            )
+        )
+        results = db.session.execute(stmt).scalars().all()
+    
+    return render_template('search.html', title='Search', form=form, results=results)

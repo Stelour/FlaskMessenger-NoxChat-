@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Search Users</h1>
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.search_user.label }}<br>
+            {{ form.search_user(size=32) }}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+
+    {% if results is not none %}
+        {% if results %}
+            <ul>
+            {% for user in results %}
+                <li>
+                    <img src="{{ url_for('static', filename='avatars/' ~ (user.profile.avatar_path or 'default.png')) }}" width="64" height="64">
+                    <div>
+                        <a href="{{ url_for('user', public_id=user.profile.public_id) }}">
+                            {{ user.username }}
+                        </a><br>
+                        <small>{{ user.profile.public_id }}</small>
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p>No users found.</p>
+        {% endif %}
+    {% endif %}
+{% endblock %}
