@@ -105,6 +105,9 @@ def edit_profile():
         
         if new_public_id != old_public_id:
             rename_avatar_directory(old_public_id, new_public_id)
+            if current_user.profile.avatar_path and '/' in current_user.profile.avatar_path:
+                _, filename = current_user.profile.avatar_path.split('/', 1)
+                current_user.profile.avatar_path = f"{new_public_id}/{filename}"
             current_user.profile.public_id = new_public_id
         
         current_user.username = form.username.data
