@@ -16,7 +16,7 @@
             <ul>
             {% for user in results %}
                 <li>
-                    <img src="{{ url_for('static', filename='avatars/' ~ (user.profile.avatar_path or 'default.png')) }}" width="64" height="64">
+                    <img src="{{ url_for('static', filename='avatars/' ~ (user.profile.avatar_path)) }}" width="64" height="64">
                     <div>
                         <a href="{{ url_for('user', public_id=user.profile.public_id) }}">
                             {{ user.username }}

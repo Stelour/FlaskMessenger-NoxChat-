@@ -64,3 +64,7 @@ class EmptyForm(FlaskForm):
 class SearchUserForm(FlaskForm):
     search_user = StringField('Username or ID', validators=[DataRequired()])
     submit = SubmitField('Submit')
+
+class FriendsForm(FlaskForm):
+    search_user = StringField('Username or ID', validators=[DataRequired()])
+    submit = SubmitField('Submit')

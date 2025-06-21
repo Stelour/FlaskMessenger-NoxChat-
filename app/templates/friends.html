@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Friends</h1>
+
+    {% if view == 'friends' %}
+        <strong>Friends</strong> |
+    {% else %}
+        <a href="{{ url_for('friends', view='friends') }}">Friends</a> |
+    {% endif %}
+
+    {% if view == 'outgoing' %}
+        <strong>Outgoing</strong> |
+    {% else %}
+        <a href="{{ url_for('friends', view='outgoing') }}">Outgoing</a> |
+    {% endif %}
+
+    {% if view == 'incoming' %}
+        <strong>Incoming</strong>
+    {% else %}
+        <a href="{{ url_for('friends', view='incoming') }}">Incoming</a>
+    {% endif %}
+
+    <form action="" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.search_user.label }}<br>
+            {{ form.search_user(size=32) }}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+
+    {% if users %}
+        <ul>
+        {% for user in users %}
+            <li>
+                <img src="{{ url_for('static', filename='avatars/' ~ (user.profile.avatar_path)) }}"
+                    width="64" height="64">
+                <div>
+                    <a href="{{ url_for('user', public_id=user.profile.public_id) }}">
+                        {{ user.username }}
+                    </a><br>
+                    <small>{{ user.profile.public_id }}</small>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No users found.</p>
+    {% endif %}
+{% endblock %}

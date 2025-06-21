@@ -16,6 +16,7 @@ from app.avatar_utils import save_avatar, rename_avatar_directory, clear_old_ava
 from app.forms import EmptyForm
 from app.updates import updates
 from app.forms import SearchUserForm
+from app.forms import FriendsForm
 
 @app.route('/')
 @app.route('/index')
@@ -25,7 +26,7 @@ def index():
     sorted_updates = sorted(updates, key=lambda u: u['date'], reverse=True)
     return render_template(
         "index.html", 
-        title='NoxChat', 
+        title='Home', 
         welcome_message=welcome_message, 
         updates=sorted_updates,)
 
@@ -244,3 +245,30 @@ def search_user():
         results = db.session.execute(stmt).scalars().all()
     
     return render_template('search.html', title='Search', form=form, results=results)
+
+@app.route('/friends', methods=['GET', 'POST'])
+@login_required
+def friends():
+    view = request.args.get('view', 'friends')
+    form = FriendsForm()
+    users = []
+
+    if view == 'friends':
+        stmt = current_user.friends.select().join(Profile)
+    elif view == 'outgoing':
+        stmt = current_user.sent_requests.select().join(Profile)
+    elif view == 'incoming':
+        stmt = current_user.received_requests.select().join(Profile)
+    
+    if form.validate_on_submit():
+        query = form.search_user.data
+        stmt = stmt.where(
+            sa.or_(
+                User.username.ilike(f'%{query}%'),
+                Profile.public_id.ilike(f'%{query}%')
+            )
+        )
+        
+    users = db.session.execute(stmt).scalars().all()
+    
+    return render_template('friends.html', title='Friends', form=form, users=users, view=view)

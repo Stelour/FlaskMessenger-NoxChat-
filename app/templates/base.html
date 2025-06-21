@@ -14,6 +14,7 @@
             <a href="{{ url_for('login') }}">Login</a>
             {% else %}
             <a href="{{ url_for('user', public_id=current_user.profile.public_id) }}">Profile</a>
+            <a href="{{ url_for('friends') }}">Friends</a>
             <a href="{{ url_for('search_user') }}">Search</a>
             <a href="{{ url_for('logout') }}">Logout</a>
             {% endif %}
