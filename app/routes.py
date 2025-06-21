@@ -140,18 +140,18 @@ def send_request(public_id):
         )
         if user is None:
             flash(f'User {public_id} not found.')
-            return redirect(url_for('index'))
+            return redirect(request.referrer or url_for('index'))
         if user == current_user:
             flash('You cannot add yourself as a friend!')
-            return redirect(url_for('user', public_id=user.profile.public_id))
+            return redirect(request.referrer or url_for('user', public_id=user.profile.public_id))
         result = current_user.send_friend_request(user)
         db.session.commit()
         if result == 'accepted':
             flash(f'You are now friends with {public_id}.')
         elif result == 'sent':
             flash(f'Friend request sent to {public_id}.')
-        return redirect(url_for('user', public_id=user.profile.public_id))
-    return redirect(url_for('index'))
+        return redirect(request.referrer or url_for('user', public_id=user.profile.public_id))
+    return redirect(request.referrer or url_for('index'))
 
 @app.route('/remove_friend/<public_id>', methods=['POST'])
 @login_required
@@ -163,15 +163,15 @@ def remove_friend(public_id):
         )
         if user is None:
             flash(f'User {public_id} not found.')
-            return redirect(url_for('index'))
+            return redirect(request.referrer or url_for('index'))
         if user == current_user:
             flash('You cannot remove yourself!')
-            return redirect(url_for('user', public_id=user.profile.public_id))
+            return redirect(request.referrer or url_for('user', public_id=user.profile.public_id))
         current_user.remove_friend(user)
         db.session.commit()
         flash(f'You are no longer friends with {public_id}.')
-        return redirect(url_for('user', public_id=user.profile.public_id))
-    return redirect(url_for('index'))
+        return redirect(url_for(request.referrer or 'user', public_id=user.profile.public_id))
+    return redirect(request.referrer or url_for('index'))
 
 @app.route('/accept_request/<public_id>', methods=['POST'])
 @login_required
@@ -183,12 +183,12 @@ def accept_request(public_id):
         )
         if user is None:
             flash(f'User {public_id} not found.')
-            return redirect(url_for('index'))
+            return redirect(request.referrer or url_for('index'))
         current_user.accept_friend_request(user)
         db.session.commit()
         flash(f'Friend request from {public_id} accepted.')
-        return redirect(url_for('user', public_id=user.profile.public_id))
-    return redirect(url_for('index'))
+        return redirect(request.referrer or url_for('user', public_id=user.profile.public_id))
+    return redirect(request.referrer or url_for('index'))
 
 @app.route('/decline_request/<public_id>', methods=['POST'])
 @login_required
@@ -200,12 +200,12 @@ def decline_request(public_id):
         )
         if user is None:
             flash(f'User {public_id} not found.')
-            return redirect(url_for('index'))
+            return redirect(request.referrer or url_for('index'))
         current_user.decline_friend_request(user)
         db.session.commit()
         flash(f'Friend request from {public_id} declined.')
-        return redirect(url_for('user', public_id=user.profile.public_id))
-    return redirect(url_for('index'))
+        return redirect(request.referrer or url_for('user', public_id=user.profile.public_id))
+    return redirect(request.referrer or url_for('index'))
 
 @app.route('/cancel_request/<public_id>', methods=['POST'])
 @login_required
@@ -217,12 +217,12 @@ def cancel_request(public_id):
         )
         if user is None:
             flash(f'User {public_id} not found.')
-            return redirect(url_for('index'))
+            return redirect(request.referrer or url_for('index'))
         current_user.cancel_friend_request(user)
         db.session.commit()
         flash(f'Friend request to {public_id} canceled.')
-        return redirect(url_for('user', public_id=user.profile.public_id))
-    return redirect(url_for('index'))
+        return redirect(request.referrer or url_for('user', public_id=user.profile.public_id))
+    return redirect(request.referrer or url_for('index'))
 
 @app.route('/search', methods=['GET', 'POST'])
 @login_required
