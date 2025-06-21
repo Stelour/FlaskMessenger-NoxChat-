@@ -170,7 +170,7 @@ def remove_friend(public_id):
         current_user.remove_friend(user)
         db.session.commit()
         flash(f'You are no longer friends with {public_id}.')
-        return redirect(url_for(request.referrer or 'user', public_id=user.profile.public_id))
+        return redirect(request.referrer or url_for('user', public_id=user.profile.public_id))
     return redirect(request.referrer or url_for('index'))
 
 @app.route('/accept_request/<public_id>', methods=['POST'])
