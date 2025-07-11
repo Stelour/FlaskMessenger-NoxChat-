@@ -13,5 +13,10 @@ updates = [
         "version": "v0.3",
         "date": "2025-07-11",
         "description": "Email support and reset password."
+    },
+    {
+        "version": "v0.3.1",
+        "date": "2025-07-11",
+        "description": "Added style for login and register form."
     }
 ]

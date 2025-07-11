@@ -1,0 +1,16 @@
+body.register-page {
+    background: url('img/bg4.png') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+}
+
+body.register-page::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    backdrop-filter: blur(15px);
+    z-index: -1;
+}

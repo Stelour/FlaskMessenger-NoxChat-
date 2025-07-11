@@ -25,13 +25,25 @@ from app.forms import ResetPasswordForm
 @app.route('/index')
 @login_required
 def index():
+    def version_key(version_str):
+        parts = version_str.lstrip('v').split('.')
+        return tuple(int(p) for p in parts)
+
     welcome_message = f"Welcome to NoxChat, {current_user.username}! "
-    sorted_updates = sorted(updates, key=lambda u: u['date'], reverse=True)
+    sorted_updates = sorted(
+        updates,
+        key=lambda u: (
+            u['date'],
+            version_key(u['version'])
+        ),
+        reverse=True
+    )
     return render_template(
-        "index.html", 
-        title='Home', 
-        welcome_message=welcome_message, 
-        updates=sorted_updates,)
+        "index.html",
+        title='Home',
+        welcome_message=welcome_message,
+        updates=sorted_updates
+    )
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -54,7 +66,7 @@ def login():
             next_page = url_for('index')
         return redirect(next_page)
     
-    return render_template('login.html', title='Sign In', form=form)
+    return render_template('login.html', title='Login', form=form)
 
 @app.route('/logout')
 def logout():

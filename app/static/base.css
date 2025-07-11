@@ -1,0 +1,102 @@
+* {
+    text-decoration: none;
+    font-family: 'Space Mono', monospace;
+}
+
+body {
+    margin: 0;
+    background-color: #0b132b;
+    color: #f0f0f0;
+    padding-top: 30px;
+}
+
+.navbar {
+    background-color: rgba(11, 28, 43, 0.6);
+    backdrop-filter: blur(10px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 50px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(107, 102, 255, 0.5);
+    z-index: 9999;
+}
+
+
+.navbar a {
+    color: #f0f0f0;
+    text-decoration: none;
+    margin-right: 20px;
+    margin-left: 20px;
+    position: relative;
+    transition: color 0.2s ease;
+}
+
+.navbar a:hover {
+    transition: all 0.1s ease;
+    color: #6b66ff;
+}
+
+.navbar a:last-child {
+    margin-right: 0;
+}
+
+.brand {
+    font-weight: bold;
+    margin-right: 20px;
+}
+
+.nav-left,
+.nav-right {
+    display: flex;
+    align-items: center;
+}
+
+hr {
+    border-color: #3a506b;
+}
+
+.flash-container {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    z-index: 10000;
+}
+
+.flash-message {
+    background-color: rgba(28, 37, 65, 0.5);
+    backdrop-filter: blur(10px);
+    color: #f0f0f0;
+    padding: 14px 20px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.6), 0 0 4px rgba(107,102,255,1);
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: flash-fade 4s forwards;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    font-size: 0.95em;
+}
+
+@keyframes flash-fade {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    15% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    85% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
