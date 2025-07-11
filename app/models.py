@@ -6,6 +6,9 @@ import sqlalchemy as sa
 import sqlalchemy.orm as so
 from app import db
 from app import login
+from time import time
+import jwt
+from app import app
 
 friends_table = sa.Table(
     'friends',
@@ -123,6 +126,20 @@ class User(UserMixin, db.Model):
         query = sa.select(sa.func.count()).select_from(
             self.friends.select().subquery())
         return db.session.scalar(query)
+    
+    def get_reset_password_token(self, expires_in=600):
+        return jwt.encode(
+            {'reset_password': self.id, 'exp': time() + expires_in},
+            app.config['SECRET_KEY'], algorithm='HS256')
+
+    @staticmethod
+    def verify_reset_password_token(token):
+        try:
+            id = jwt.decode(token, app.config['SECRET_KEY'],
+                            algorithms=['HS256'])['reset_password']
+        except:
+            return
+        return db.session.get(User, id)
 
 class Profile(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
