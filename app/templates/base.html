@@ -6,22 +6,29 @@
             <title>NoxChat</title>
         {% endif %}
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo3.png') }}">
     </head>
         <body class="{% block body_class %}{% endblock %}">
         <nav class="navbar">
             <div class="nav-left">
-                <span class="brand">NoxChat:</span>
-                <a href="{{ url_for('index') }}">Home</a>
-                {% if current_user.is_anonymous %}
-                    <a href="{{ url_for('login') }}">Login</a>
-                {% else %}
-                    <a href="{{ url_for('user', public_id=current_user.profile.public_id) }}">Profile</a>
+                <span class="brand">
+                    <img src="{{ url_for('static', filename='img/logo3.png') }}" alt="Логотип" class="brand-logo">
+                    NoxChat
+                </span>
+                {% if not current_user.is_anonymous %}
+                    <a href="{{ url_for('index') }}">Home</a>
                     <a href="{{ url_for('friends') }}">Friends</a>
                     <a href="{{ url_for('search_user') }}">Search</a>
                 {% endif %}
             </div>
-            {% if not current_user.is_anonymous %}
+            {% if current_user.is_anonymous %}
             <div class="nav-right">
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('register') }}">Register</a>
+            </div>
+            {% else %}
+            <div class="nav-right">
+                <a href="{{ url_for('user', public_id=current_user.profile.public_id) }}">Profile</a>
                 <a href="{{ url_for('logout') }}">Logout</a>
             </div>
             {% endif %}

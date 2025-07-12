@@ -46,8 +46,26 @@ body {
 }
 
 .brand {
+    display: flex;
+    align-items: center;
+    font-size: 1.1em;
     font-weight: bold;
     margin-right: 20px;
+}
+
+.brand-logo {
+    height: 30px;
+    margin-right: 25px;
+    margin-top: -5px;
+    margin-bottom: -5px;
+}
+
+.login-logo {
+    margin-bottom: 15px;
+    align-items: center;
+    height: 100px;
+    margin-right: 10px;
+    user-select: none;
 }
 
 .nav-left,

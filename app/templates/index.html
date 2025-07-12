@@ -1,20 +1,19 @@
 {% extends "base.html" %}
 
-{% block content %}
-    <div>
-        <h1>{{ welcome_message }}</h1>
+{% block body_class %}home-page{% endblock %}
 
-        <div>
-            <h3>What is new?</h3>
-            <ul>
-                {% for item in updates %}
-                <li>
-                    <strong>{{ item.version }} – {{ item.date }}</strong>:
-                    {{ item.description }}
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-        
+{% block content %}
+<div class="changelog-wrapper">
+    <h1 class="changelog-title">{{ welcome_message }}</h1>
+    <div>
+        <ul>
+            {% for item in updates %}
+            <li class="changelog-item">
+                <strong>{{ item.version }} – {{ item.date }}</strong>
+                <span class="changelog-description">{{ item.description }}</span>
+            </li>
+            {% endfor %}
+        </ul>
     </div>
+</div>
 {% endblock %}

@@ -18,5 +18,10 @@ updates = [
         "version": "v0.3.1",
         "date": "2025-07-11",
         "description": "Added style for login and register form."
+    },
+    {
+        "version": "v0.3.2",
+        "date": "2025-07-11",
+        "description": "Added Logo for NoxChat and added some styles."
     }
 ]

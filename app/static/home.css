@@ -1,0 +1,60 @@
+body.home-page {
+    background: url('img/bg3.png') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+}
+
+body.home-page::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    backdrop-filter: blur(10px);
+    z-index: -1;
+}
+
+.changelog-wrapper {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 30px;
+    background: rgba(20, 20, 30, 0.2);
+    border-radius: 16px;
+    backdrop-filter: blur(50px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.changelog-title {
+    text-align: center;
+    font-size: 2.2em;
+    margin-bottom: 30px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.changelog-item {
+    background: rgba(40, 50, 70, 0.4);
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.2s, border 0.2s;
+}
+
+.changelog-item:hover {
+    background: rgba(60, 70, 90, 0.5);
+    border: 1px solid rgba(102, 217, 255, 0.1);
+}
+
+.changelog-item strong {
+    display: block;
+    color: #9ecfff;
+    margin-bottom: 4px;
+    font-size: 1em;
+}
+
+.changelog-description {
+    color: #ccc;
+    font-size: 0.95em;
+}
