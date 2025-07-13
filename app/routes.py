@@ -52,11 +52,20 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
+        identifier = form.identifier.data
         user = db.session.scalar(
-            sa.select(User).where(User.username == form.username.data))
+            sa.select(User)
+            .join(Profile)
+            .where(
+                sa.or_(
+                    User.email == identifier,
+                    Profile.public_id == identifier
+                )
+            )
+        )
         
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
+            flash('Invalid login or password')
             return redirect(url_for('login'))
         
         login_user(user, remember=form.remember_me.data)
