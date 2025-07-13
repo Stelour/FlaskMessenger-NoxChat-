@@ -19,10 +19,11 @@ body.home-page::before {
     max-width: 800px;
     margin: 50px auto;
     padding: 30px;
-    background: rgba(20, 20, 30, 0.2);
+    background: rgba(30, 30, 45, 0.2);
     border-radius: 16px;
-    backdrop-filter: blur(50px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
 }
 
 .changelog-title {

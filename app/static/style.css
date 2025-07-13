@@ -3,3 +3,8 @@
 @import "register.css";
 @import "reset_password.css";
 @import "home.css";
+@import "user.css";
+@import "edit_profile.css";
+@import "search.css";
+@import "friends.css";
+@import "errors.css";

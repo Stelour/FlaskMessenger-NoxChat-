@@ -1,0 +1,93 @@
+body.edit-profile-page {
+    background: url('img/bg3.png') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+}
+
+body.edit-profile-page::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    backdrop-filter: blur(10px);
+    z-index: -1;
+}
+
+.edit-profile-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 50px;
+}
+
+.edit-profile-container {
+    width: 420px;
+    padding: 30px;
+    background: rgba(30, 30, 45, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(60px);
+    transition: transform 0.3s ease;
+}
+
+.edit-profile-container input[type="text"],
+.edit-profile-container textarea,
+.edit-profile-container input[type="file"] {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #f0f0f0;
+    border-radius: 10px;
+    transition: border 0.2s ease, background 0.2s ease;
+}
+
+.edit-profile-container input[type="text"]:focus,
+.edit-profile-container textarea:focus {
+    border-color: rgba(255, 255, 255, 0.4);
+    background-color: rgba(255, 255, 255, 0.1);
+    outline: none;
+}
+
+.edit-profile-container textarea {
+    resize: none;
+    min-height: 100px;
+}
+
+.edit-profile-container input[type="file"]::-webkit-file-upload-button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: rgba(40, 40, 70, 0.7);
+    color: #f0f0f0;
+    cursor: pointer;
+    font-weight: 600;
+    margin-right: 12px;
+    transition: background 0.2s ease;
+}
+
+.edit-profile-container input[type="file"]::-webkit-file-upload-button:hover {
+    background-color: rgba(60, 60, 110, 0.9);
+}
+
+.edit-profile-container input[type="submit"] {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background-color: rgba(40, 40, 70, 0.8);
+    color: #f0f0f0;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.edit-profile-container input[type="submit"]:hover {
+    background-color: rgba(60, 60, 110, 1);
+    transform: scale(1.02);
+}

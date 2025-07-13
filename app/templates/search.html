@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 
+{% block body_class %}search-page{% endblock %}
+
 {% block content %}
+<div class="search-container">
     <h1>Search Users</h1>
-    <form action="" method="post" novalidate>
+    <form action="" method="post" novalidate class="search-form" autocomplete="off">
         {{ form.hidden_tag() }}
-        <p>
-            {{ form.search_user.label }}<br>
-            {{ form.search_user(size=32) }}
+        <p class="field">
+            {{ form.search_user(size=32, placeholder=form.search_user.label.text) }}
         </p>
-        <p>{{ form.submit() }}</p>
+        <p class="actions">{{ form.submit() }}</p>
     </form>
 
     {% if results is not none %}
@@ -17,31 +19,27 @@
             {% for user in results %}
                 <li>
                     <img src="{{ url_for('static', filename='avatars/' ~ (user.profile.avatar_path)) }}" width="64" height="64">
-                    <div>
+                    <div class="user-info">
                         <a href="{{ url_for('user', public_id=user.profile.public_id) }}">
                             {{ user.username }}
                         </a><br>
                         <small>{{ user.profile.public_id }}</small>
                     </div>
                     {% if user != current_user %}
+                    <div class="user-actions">
                         {% if current_user.is_friend(user) %}
-                        <p>
                             <form action="{{ url_for('remove_friend', public_id=user.profile.public_id) }}" method="post">
                                 {{ form.hidden_tag() }}
                                 {{ form.submit(value='Remove Friend') }}
                             </form>
-                        </p>
 
                         {% elif current_user.sent_request_to(user) %}
-                        <p>
                             <form action="{{ url_for('cancel_request', public_id=user.profile.public_id) }}" method="post">
                                 {{ form.hidden_tag() }}
                                 {{ form.submit(value='Cancel Request') }}
                             </form>
-                        </p>
 
                         {% elif current_user.received_request_from(user) %}
-                        <p>
                             <form action="{{ url_for('accept_request', public_id=user.profile.public_id) }}" method="post">
                                 {{ form.hidden_tag() }}
                                 {{ form.submit(value='Accept Request') }}
@@ -50,16 +48,14 @@
                                 {{ form.hidden_tag() }}
                                 {{ form.submit(value='Decline Request') }}
                             </form>
-                        </p>
-                        
+
                         {% else %}
-                        <p>
                             <form action="{{ url_for('send_request', public_id=user.profile.public_id) }}" method="post">
                                 {{ form.hidden_tag() }}
                                 {{ form.submit(value='Add Friend') }}
                             </form>
-                        </p>
                         {% endif %}
+                    </div>
                     {% endif %}
                 </li>
             {% endfor %}
@@ -68,4 +64,5 @@
             <p>No users found.</p>
         {% endif %}
     {% endif %}
+</div>
 {% endblock %}

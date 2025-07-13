@@ -1,0 +1,101 @@
+body.user-page {
+    background: url('img/bg3.png') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+}
+
+body.user-page::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    backdrop-filter: blur(10px);
+    z-index: -1;
+}
+
+.profile-container {
+    max-width: 750px;
+    margin: 60px auto;
+    padding: 20px;
+    padding-right: 0px;
+    background: rgba(30, 30, 45, 0.2);
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s ease;
+}
+
+.profile-container table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.profile-container td {
+    padding: 12px;
+    vertical-align: middle;
+}
+
+.profile-avatar {
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    transition: 0.2s ease;
+    user-select: none;
+}
+
+.profile-avatar:hover {
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.7);
+    transform: scale(1.03);
+}
+
+.profile-details h1 {
+    margin: 0 0 12px 0;
+    font-size: 28px;
+    color: #fff;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    position: relative;
+    padding-bottom: 8px;
+}
+
+.profile-details h1::after {
+    content: "";
+    display: block;
+    width: 250px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.4);
+    margin-top: 6px;
+    border-radius: 2px;
+}
+
+.profile-details p {
+    margin: 8px 0;
+    color: #ccc;
+    line-height: 1.5;
+}
+
+.profile-details form {
+    display: inline-block;
+    margin-right: 12px;
+}
+
+.profile-container input[type="submit"] {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 16px;
+    background-color: #0b1c2b;
+    color: #f0f0f0;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.profile-container input[type="submit"]:hover {
+    background-color: rgba(92, 122, 255, 0.2);
+    transition: all 0.2s ease;
+}

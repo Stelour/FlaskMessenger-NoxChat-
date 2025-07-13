@@ -1,0 +1,24 @@
+body.errors-page {
+    background: url('img/bg2.png') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+}
+
+body.errors-page::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    backdrop-filter: blur(5px);
+    z-index: -1;
+}
+
+.error-container {
+    margin: 100px 100px;
+}
+
+.error-container h1 {
+    margin-top: 0;
+}

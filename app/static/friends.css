@@ -1,0 +1,119 @@
+body.friends-page {
+    background: url('img/bg3.png') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+}
+
+body.friends-page::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    backdrop-filter: blur(10px);
+    z-index: -1;
+}
+
+.friends-container {
+    max-width: 750px;
+    margin: 60px auto;
+    padding: 20px;
+    background: rgba(30, 30, 45, 0.2);
+    border-radius: 20px;
+    backdrop-filter: blur(60px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.friends-container-nav {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 16px;
+}
+
+.friends-container h1 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.friends-container ul {
+    list-style: none;
+    padding: 0;
+}
+
+.friends-container li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.friends-container li img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    margin-right: 12px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.friends-container .user-info {
+    flex-grow: 1;
+}
+
+.friends-container .user-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.friends-container .user-actions form {
+    margin: 0;
+}
+
+.friends-container form {
+    margin: 0 8px;
+}
+
+.search-form {
+    display: flex;
+    gap: 12px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.search-form .field {
+    flex-grow: 1;
+    margin: 0;
+}
+
+.search-form .actions {
+    margin: 0;
+}
+
+.friends-container input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #3a506b;
+    background-color: transparent;
+    color: #f0f0f0;
+    border-radius: 16px;
+}
+
+.friends-container input[type="submit"] {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 16px;
+    background-color: #0b1c2b;
+    color: #f0f0f0;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.friends-container input[type="submit"]:hover {
+    background-color: rgba(92, 122, 255, 0.2);
+    transition: all 0.2s ease;
+}
