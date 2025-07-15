@@ -33,7 +33,7 @@
                 {% if user != current_user %}
                     {% if current_user.is_friend(user) %}
                     <p>
-                        <form action="{{ url_for('remove_friend', public_id=user.profile.public_id) }}" method="post">
+                        <form action="{{ url_for('main.remove_friend', public_id=user.profile.public_id) }}" method="post">
                             {{ form.hidden_tag() }}
                             {{ form.submit(value='Remove Friend') }}
                         </form>
@@ -41,7 +41,7 @@
 
                     {% elif current_user.sent_request_to(user) %}
                     <p>
-                        <form action="{{ url_for('cancel_request', public_id=user.profile.public_id) }}" method="post">
+                        <form action="{{ url_for('main.cancel_request', public_id=user.profile.public_id) }}" method="post">
                             {{ form.hidden_tag() }}
                             {{ form.submit(value='Cancel Request') }}
                         </form>
@@ -49,11 +49,11 @@
 
                     {% elif current_user.received_request_from(user) %}
                     <p>
-                        <form action="{{ url_for('accept_request', public_id=user.profile.public_id) }}" method="post">
+                        <form action="{{ url_for('main.accept_request', public_id=user.profile.public_id) }}" method="post">
                             {{ form.hidden_tag() }}
                             {{ form.submit(value='Accept Request') }}
                         </form>
-                        <form action="{{ url_for('decline_request', public_id=user.profile.public_id) }}" method="post">
+                        <form action="{{ url_for('main.decline_request', public_id=user.profile.public_id) }}" method="post">
                             {{ form.hidden_tag() }}
                             {{ form.submit(value='Decline Request') }}
                         </form>
@@ -61,7 +61,7 @@
                     
                     {% else %}
                     <p>
-                        <form action="{{ url_for('send_request', public_id=user.profile.public_id) }}" method="post">
+                        <form action="{{ url_for('main.send_request', public_id=user.profile.public_id) }}" method="post">
                             {{ form.hidden_tag() }}
                             {{ form.submit(value='Add Friend') }}
                         </form>
@@ -72,7 +72,7 @@
         </tr>
     </table>
     {% if user == current_user %}
-        <p><a href="{{ url_for('edit_profile') }}">Edit your profile</a></p>
+        <p><a href="{{ url_for('main.edit_profile') }}">Edit your profile</a></p>
     {% endif %}
 </div>
 {% endblock %}

@@ -16,20 +16,20 @@
                     NoxChat
                 </span>
                 {% if not current_user.is_anonymous %}
-                    <a href="{{ url_for('index') }}">Home</a>
-                    <a href="{{ url_for('friends') }}">Friends</a>
-                    <a href="{{ url_for('search_user') }}">Search</a>
+                    <a href="{{ url_for('main.index') }}">Home</a>
+                    <a href="{{ url_for('main.friends') }}">Friends</a>
+                    <a href="{{ url_for('main.search_user') }}">Search</a>
                 {% endif %}
             </div>
             {% if current_user.is_anonymous %}
             <div class="nav-right">
-                <a href="{{ url_for('login') }}">Login</a>
-                <a href="{{ url_for('register') }}">Register</a>
+                <a href="{{ url_for('auth.login') }}">Login</a>
+                <a href="{{ url_for('auth.register') }}">Register</a>
             </div>
             {% else %}
             <div class="nav-right">
-                <a href="{{ url_for('user', public_id=current_user.profile.public_id) }}">Profile</a>
-                <a href="{{ url_for('logout') }}">Logout</a>
+                <a href="{{ url_for('main.user', public_id=current_user.profile.public_id) }}">Profile</a>
+                <a href="{{ url_for('auth.logout') }}">Logout</a>
             </div>
             {% endif %}
         </nav>

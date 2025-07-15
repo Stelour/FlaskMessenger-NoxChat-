@@ -25,11 +25,11 @@
             </div>
             <div class="login-actions">
                 <label>{{ form.remember_me() }} {{ form.remember_me.label }}</label>
-                <a class="forgot-link" href="{{ url_for('reset_password_request') }}">Forgot Password?</a>
+                <a class="forgot-link" href="{{ url_for('auth.reset_password_request') }}">Forgot Password?</a>
             </div>
             {{ form.submit(class_='btn-primary') }}
             <div class="register-link">
-                New User? <a href="{{ url_for('register') }}">Register!</a>
+                New User? <a href="{{ url_for('auth.register') }}">Register!</a>
             </div>
         </form>
     </div>
