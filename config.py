@@ -11,3 +11,6 @@ class Config:
     # aiosmtpd -n -c aiosmtpd.handlers.Debugging -l localhost:8025
     MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'localhost'
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 8025)
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "connect_args": {"options": "-c timezone=utc"}
+    }

@@ -1,6 +1,6 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 import sqlalchemy as sa
 import sqlalchemy.orm as so
@@ -146,7 +146,11 @@ class Profile(db.Model):
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), unique=True)
     bio: so.Mapped[Optional[str]] = so.mapped_column(sa.Text)
     avatar_path: so.Mapped[Optional[str]] = so.mapped_column(sa.String(256), default="base.jpg")
-    last_seen: so.Mapped[Optional[datetime]] = so.mapped_column(sa.DateTime)
+    last_seen: so.Mapped[datetime] = so.mapped_column(
+        sa.DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )
     public_id: so.Mapped[Optional[str]] = so.mapped_column(sa.String(64), index=True, unique=True)
 
     user: so.Mapped["User"] = so.relationship(back_populates="profile")

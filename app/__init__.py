@@ -7,10 +7,11 @@ import logging
 from logging.handlers import RotatingFileHandler
 from flask_mail import Mail
 import os
+from flask_moment import Moment
 
 app = Flask(__name__)
 app.config.from_object(Config)
-
+moment = Moment(app)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 login = LoginManager(app)
