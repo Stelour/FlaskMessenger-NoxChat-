@@ -24,6 +24,7 @@ friend_requests = sa.Table(
 )
 
 class User(UserMixin, db.Model):
+    __searchable__ = ['username']
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
@@ -141,6 +142,7 @@ class User(UserMixin, db.Model):
         return db.session.get(User, id)
 
 class Profile(db.Model):
+    __searchable__ = ['public_id']
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), unique=True)
     bio: so.Mapped[Optional[str]] = so.mapped_column(sa.Text)

@@ -4,10 +4,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 import logging
-from logging.handlers import RotatingFileHandler, SMTPHandler
+from logging.handlers import RotatingFileHandler
 from flask_mail import Mail
 import os
 from flask_moment import Moment
+from elasticsearch import Elasticsearch
 
 moment = Moment()
 db = SQLAlchemy()
@@ -34,6 +35,9 @@ def create_app(config_class=Config):
 
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
+    
+    app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']]) \
+        if app.config['ELASTICSEARCH_URL'] else None
 
     if not app.debug:
         if not os.path.exists('logs'):
