@@ -44,6 +44,7 @@
         {% endif %}
         {% endwith %}
         {% block content %}{% endblock %}
+        <script src="{{ url_for('static', filename='infinite_scroll.js') }}"></script>
         {{ moment.include_moment() }}
     </body>
 </html>

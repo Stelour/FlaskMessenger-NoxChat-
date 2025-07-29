@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, current_app, jsonify
 from flask_login import current_user, login_required
 import sqlalchemy as sa
 from app import db
@@ -179,34 +179,52 @@ def cancel_request(public_id):
         return redirect(request.referrer or url_for('main.user', public_id=user.profile.public_id))
     return redirect(request.referrer or url_for('main.index'))
 
+def pg(stmt, page):
+    per_page = current_app.config['USERS_PER_PAGE']
+    stmt = (stmt.order_by(User.username)
+            .offset((page - 1) * per_page)
+            .limit(per_page + 1))
+    fetched = db.session.execute(stmt).scalars().all()
+    return fetched[:per_page], len(fetched) > per_page
+
 @bp.route('/search', methods=['GET', 'POST'])
 @login_required
 def search_user():
     form = SearchUserForm()
-    results = None
-    
     if form.validate_on_submit():
-        query = form.search_user.data
-        stmt = (
-            sa.select(User)
-            .join(Profile)
-            .where(
-                sa.or_(
-                    User.username.ilike(f"%{query}%"),
-                    Profile.public_id.ilike(f"%{query}%")
-                )
+        q = form.search_user.data.strip()
+        return redirect(url_for('main.search_user', q=q)) if q else redirect(url_for('main.search_user'))
+
+    query = request.args.get('q', '', type=str)
+    page = request.args.get('page', 1, type=int)
+    stmt = sa.select(User).join(Profile)
+    if query:
+        stmt = stmt.where(
+            sa.or_(
+                User.username.ilike(f'%{query}%'),
+                Profile.public_id.ilike(f'%{query}%')
             )
         )
-        results = db.session.execute(stmt).scalars().all()
-    
-    return render_template('search.html', title='Search', form=form, results=results)
+
+    users, has_more = pg(stmt, page)
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        html = render_template('_users_list.html', users=users, form=EmptyForm())
+        return jsonify({'html': html, 'has_more': has_more})
+
+    results = users if query else None
+    return render_template('search.html', title='Search', form=form, results=results, query=query, has_more=has_more)
 
 @bp.route('/friends', methods=['GET', 'POST'])
 @login_required
 def friends():
     view = request.args.get('view', 'friends')
     form = FriendsForm()
-    users = []
+    if form.validate_on_submit():
+        return redirect(url_for('main.friends', view=view, q=form.search_user.data))
+
+    query = request.args.get('q', '', type=str)
+    page = request.args.get('page', 1, type=int)
 
     if view == 'friends':
         stmt = current_user.friends.select().join(Profile)
@@ -214,16 +232,21 @@ def friends():
         stmt = current_user.sent_requests.select().join(Profile)
     elif view == 'incoming':
         stmt = current_user.received_requests.select().join(Profile)
-    
-    if form.validate_on_submit():
-        query = form.search_user.data
+    else:
+        stmt = current_user.friends.select().join(Profile)
+
+    if query:
         stmt = stmt.where(
             sa.or_(
                 User.username.ilike(f'%{query}%'),
                 Profile.public_id.ilike(f'%{query}%')
             )
         )
-        
-    users = db.session.execute(stmt).scalars().all()
-    
-    return render_template('friends.html', title='Friends', form=form, users=users, view=view)
+
+    users, has_more = pg(stmt, page)
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        html = render_template('_users_list.html', users=users, form=EmptyForm())
+        return jsonify({'html': html, 'has_more': has_more})
+
+    return render_template('friends.html', title='Friends', form=form, users=users, view=view, query=query, has_more=has_more)

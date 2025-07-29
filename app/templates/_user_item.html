@@ -1,0 +1,38 @@
+<li>
+    <img src="{{ url_for('static', filename='avatars/' ~ user.profile.avatar_path) }}" width="64" height="64">
+    <div class="user-info">
+        <a href="{{ url_for('main.user', public_id=user.profile.public_id) }}">
+            {{ user.username }}
+        </a><br>
+        <small>{{ user.profile.public_id }}</small>
+    </div>
+    {% if user != current_user %}
+    <div class="user-actions">
+        {% if current_user.is_friend(user) %}
+            <form action="{{ url_for('main.remove_friend', public_id=user.profile.public_id) }}" method="post">
+                {{ form.hidden_tag() }}
+                {{ form.submit(value='Remove Friend') }}
+            </form>
+        {% elif current_user.sent_request_to(user) %}
+            <form action="{{ url_for('main.cancel_request', public_id=user.profile.public_id) }}" method="post">
+                {{ form.hidden_tag() }}
+                {{ form.submit(value='Cancel Request') }}
+            </form>
+        {% elif current_user.received_request_from(user) %}
+            <form action="{{ url_for('main.accept_request', public_id=user.profile.public_id) }}" method="post">
+                {{ form.hidden_tag() }}
+                {{ form.submit(value='Accept Request') }}
+            </form>
+            <form action="{{ url_for('main.decline_request', public_id=user.profile.public_id) }}" method="post">
+                {{ form.hidden_tag() }}
+                {{ form.submit(value='Decline Request') }}
+            </form>
+        {% else %}
+            <form action="{{ url_for('main.send_request', public_id=user.profile.public_id) }}" method="post">
+                {{ form.hidden_tag() }}
+                {{ form.submit(value='Add Friend') }}
+            </form>
+        {% endif %}
+    </div>
+    {% endif %}
+</li>
