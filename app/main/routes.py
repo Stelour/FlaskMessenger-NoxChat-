@@ -8,6 +8,7 @@ from app.main.avatar_utils import save_avatar, rename_avatar_directory, clear_ol
 from app.main.updates import updates
 from app.main.forms import SearchUserForm, EditProfileForm, FriendsForm, EmptyForm
 from app.main import bp
+from app.search import query_index
 
 @bp.route('/')
 @bp.route('/index')
@@ -179,7 +180,7 @@ def cancel_request(public_id):
         return redirect(request.referrer or url_for('main.user', public_id=user.profile.public_id))
     return redirect(request.referrer or url_for('main.index'))
 
-def pg(stmt, page):
+def pg(stmt, page): #pg ilike request
     per_page = current_app.config['USERS_PER_PAGE']
     stmt = (stmt.order_by(User.username)
             .offset((page - 1) * per_page)
@@ -195,25 +196,38 @@ def search_user():
         q = form.search_user.data.strip()
         return redirect(url_for('main.search_user', q=q)) if q else redirect(url_for('main.search_user'))
 
-    query = request.args.get('q', '', type=str)
+    query = request.args.get('q', '', type=str).strip()
     page = request.args.get('page', 1, type=int)
-    stmt = sa.select(User).join(Profile)
-    if query:
-        stmt = stmt.where(
-            sa.or_(
+    per_page = current_app.config['USERS_PER_PAGE']
+
+    def respond(users, has_more):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            html = render_template('_users_list.html', users=users, form=EmptyForm())
+            return jsonify({'html': html, 'has_more': has_more})
+        return render_template('search.html', title='Search',
+                               form=form, results=users if users else None,
+                               query=query, has_more=has_more)
+
+    if not query:
+        return respond([], False)
+
+    if current_app.elasticsearch:
+        try:
+            rows, total = User.search(query, page, per_page)
+            users = list(rows) if not isinstance(rows, list) else rows
+            has_more = total > page * per_page
+            return respond(users, has_more)
+        except Exception:
+            current_app.logger.exception('Elasticsearch error in search_user; falling back to DB')
+
+    stmt = (sa.select(User)
+            .join(Profile)
+            .where(sa.or_(
                 User.username.ilike(f'%{query}%'),
                 Profile.public_id.ilike(f'%{query}%')
-            )
-        )
-
+            )))
     users, has_more = pg(stmt, page)
-
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        html = render_template('_users_list.html', users=users, form=EmptyForm())
-        return jsonify({'html': html, 'has_more': has_more})
-
-    results = users if query else None
-    return render_template('search.html', title='Search', form=form, results=results, query=query, has_more=has_more)
+    return respond(users, has_more)
 
 @bp.route('/friends', methods=['GET', 'POST'])
 @login_required

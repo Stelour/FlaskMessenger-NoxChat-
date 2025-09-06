@@ -47,6 +47,14 @@ class SearchableMixin(object):
             'update': list(session.dirty),
             'delete': list(session.deleted)
         }
+        
+        for obj in session._changes['add'] + session._changes['update']:
+            if isinstance(obj, SearchableMixin):
+                for field in obj.__searchable__:
+                    try:
+                        getattr(obj, field)
+                    except Exception:
+                        pass
 
     @classmethod
     def after_commit(cls, session):
@@ -70,7 +78,7 @@ db.event.listen(db.session, 'before_commit', SearchableMixin.before_commit)
 db.event.listen(db.session, 'after_commit', SearchableMixin.after_commit)
 
 class User(SearchableMixin, UserMixin, db.Model):
-    __searchable__ = ['username']
+    __searchable__ = ['username', 'public_id']
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     username: so.Mapped[str] = so.mapped_column(sa.String(64), index=True, unique=True)
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
@@ -78,6 +86,10 @@ class User(SearchableMixin, UserMixin, db.Model):
     
     profile: so.Mapped["Profile"] = so.relationship(back_populates="user")
 
+    @property
+    def public_id(self) -> Optional[str]:
+        return self.profile.public_id if self.profile else None
+    
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -187,8 +199,7 @@ class User(SearchableMixin, UserMixin, db.Model):
             return
         return db.session.get(User, id)
 
-class Profile(SearchableMixin, db.Model):
-    __searchable__ = ['public_id']
+class Profile(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), unique=True)
     bio: so.Mapped[Optional[str]] = so.mapped_column(sa.Text)

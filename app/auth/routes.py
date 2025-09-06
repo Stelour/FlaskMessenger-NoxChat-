@@ -54,14 +54,13 @@ def register():
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
+        profile = Profile(bio="No bio yet")
+        profile.user = user
         db.session.add(user)
         db.session.commit()
-        
-        profile = Profile(user_id=user.id, public_id=f'{user.username.lower()}_{user.id}')
-        profile.bio = "No bio yet"
-        db.session.add(profile)
+        profile.public_id = f'{user.username.lower()}_{user.id}'
         db.session.commit()
-
+        
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', title='Register', form=form)
