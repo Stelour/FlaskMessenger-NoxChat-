@@ -28,5 +28,10 @@ updates = [
         "version": "v0.2.2",
         "date": "2025-07-13",
         "description": "Added some styles and fixed some bugs."
+    },
+    {
+        "version": "v0.2.3",
+        "date": "2025-09-07",
+        "description": "Added Elasticsearch and infinity-scrolling. Fixed some bugs"
     }
 ]
