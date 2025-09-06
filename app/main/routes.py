@@ -8,7 +8,7 @@ from app.main.avatar_utils import save_avatar, rename_avatar_directory, clear_ol
 from app.main.updates import updates
 from app.main.forms import SearchUserForm, EditProfileForm, FriendsForm, EmptyForm
 from app.main import bp
-from app.search import add_to_index
+from app.search import query_index
 
 @bp.route('/')
 @bp.route('/index')
@@ -199,74 +199,24 @@ def search_user():
     query = request.args.get('q', '', type=str)
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config['USERS_PER_PAGE']
+    if not query:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'html': '', 'has_more': False})
+        return render_template('search.html', title='Search', form=form, results=None, query=query, has_more=False)
 
-    if current_app.elasticsearch and query:
-        try:
-            es_query = {
-                'bool': {
-                    'should': [
-                        {'wildcard': {'username.keyword': {'value': f'*{query}*', 'case_insensitive': True}}},
-                        {'wildcard': {'public_id.keyword': {'value': f'*{query}*', 'case_insensitive': True}}},
-                        {'match_phrase_prefix': {'username': {'query': query}}},
-                        {'match_phrase_prefix': {'public_id': {'query': query}}}
-                    ],
-                    'minimum_should_match': 1
-                }
-            }
-
-            size_cap = min(per_page * page * 5, 1000)
-            resp = current_app.elasticsearch.search(
-                index=['user', 'profile'],
-                query=es_query,
-                from_=0,
-                size=size_cap
-            )
-            hits_list = resp.get('hits', {}).get('hits', [])
-
-            profile_ids = [int(h['_id']) for h in hits_list if not h.get('_index', '').endswith('user')]
-            profile_map = {}
-            if profile_ids:
-                rows = db.session.execute(
-                    sa.select(Profile.id, Profile.user_id).where(Profile.id.in_(profile_ids))
-                ).all()
-                profile_map = {pid: uid for pid, uid in rows}
-
-            unique_user_ids, seen = [], set()
-            for h in hits_list:
-                idx = h.get('_index', '')
-                _id = int(h.get('_id'))
-                uid = _id if idx.endswith('user') else profile_map.get(_id)
-                if uid and uid not in seen:
-                    seen.add(uid)
-                    unique_user_ids.append(uid)
-
-            start = (page - 1) * per_page
-            end = start + per_page
-            page_ids = unique_user_ids[start:end]
-            has_more = len(unique_user_ids) > end
-
-            users = []
-            if page_ids:
-                when = [(page_ids[i], i) for i in range(len(page_ids))]
-                users = db.session.execute(
-                    sa.select(User).join(Profile)
-                    .where(User.id.in_(page_ids))
-                    .order_by(db.case(*when, value=User.id))
-                ).scalars().all()
+    try:
+        users_query, total = User.search(query, page, per_page)
+        if total:
+            users = users_query.all()
+            has_more = total > page * per_page
 
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 html = render_template('_users_list.html', users=users, form=EmptyForm())
                 return jsonify({'html': html, 'has_more': has_more})
 
-            results = users
-            return render_template('search.html', title='Search', form=form, results=results, query=query, has_more=has_more)
-        except Exception:
-            current_app.logger.exception('Elasticsearch error in search_user; falling back to DB')
-
-    if not query:
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'html': '', 'has_more': False})
-        return render_template('search.html', title='Search', form=form, results=None, query=query, has_more=False)
+            return render_template('search.html', title='Search', form=form, results=users, query=query, has_more=has_more)
+    except Exception:
+        current_app.logger.exception('Elasticsearch error in search_user; falling back to DB')
 
     stmt = sa.select(User).join(Profile).where(
         sa.or_(
@@ -280,8 +230,7 @@ def search_user():
         html = render_template('_users_list.html', users=users, form=EmptyForm())
         return jsonify({'html': html, 'has_more': has_more})
 
-    results = users
-    return render_template('search.html', title='Search', form=form, results=results, query=query, has_more=has_more)
+    return render_template('search.html', title='Search', form=form, results=users, query=query, has_more=has_more)
 
 @bp.route('/friends', methods=['GET', 'POST'])
 @login_required
@@ -304,47 +253,13 @@ def friends():
     else:
         base_stmt = current_user.friends.select().join(Profile)
 
-    if current_app.elasticsearch and query:
+    if query:
         try:
-            es_query = {
-                'bool': {
-                    'should': [
-                        {'wildcard': {'username.keyword': {'value': f'*{query}*', 'case_insensitive': True}}},
-                        {'wildcard': {'public_id.keyword': {'value': f'*{query}*', 'case_insensitive': True}}},
-                        {'match_phrase_prefix': {'username': {'query': query}}},
-                        {'match_phrase_prefix': {'public_id': {'query': query}}}
-                    ],
-                    'minimum_should_match': 1
-                }
-            }
-
             size_cap = min(per_page * page * 5, 1000)
-            resp = current_app.elasticsearch.search(
-                index=['user', 'profile'],
-                query=es_query,
-                from_=0, size=size_cap
-            )
-            hits_list = resp.get('hits', {}).get('hits', [])
-
-            profile_ids = [int(h['_id']) for h in hits_list if not h.get('_index', '').endswith('user')]
-            profile_map = {}
-            if profile_ids:
-                rows = db.session.execute(
-                    sa.select(Profile.id, Profile.user_id).where(Profile.id.in_(profile_ids))
-                ).all()
-                profile_map = {pid: uid for pid, uid in rows}
-            
-            candidates, seen = [], set()
-            for h in hits_list:
-                idx = h.get('_index', '')
-                _id = int(h.get('_id'))
-                uid = _id if idx.endswith('user') else profile_map.get(_id)
-                if uid and uid not in seen:
-                    seen.add(uid)
-                    candidates.append(uid)
+            ids, _ = query_index(User.__tablename__, query, 1, size_cap)
 
             rel_ids = set(db.session.scalars(base_stmt.with_only_columns(User.id)).all())
-            filtered = [uid for uid in candidates if uid in rel_ids]
+            filtered = [uid for uid in ids if uid in rel_ids]
 
             start = (page - 1) * per_page
             end = start + per_page
