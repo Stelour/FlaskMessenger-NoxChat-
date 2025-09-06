@@ -196,41 +196,38 @@ def search_user():
         q = form.search_user.data.strip()
         return redirect(url_for('main.search_user', q=q)) if q else redirect(url_for('main.search_user'))
 
-    query = request.args.get('q', '', type=str)
+    query = request.args.get('q', '', type=str).strip()
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config['USERS_PER_PAGE']
-    if not query:
+
+    def respond(users, has_more):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'html': '', 'has_more': False})
-        return render_template('search.html', title='Search', form=form, results=None, query=query, has_more=False)
+            html = render_template('_users_list.html', users=users, form=EmptyForm())
+            return jsonify({'html': html, 'has_more': has_more})
+        return render_template('search.html', title='Search',
+                               form=form, results=users if users else None,
+                               query=query, has_more=has_more)
 
-    try:
-        users_query, total = User.search(query, page, per_page)
-        if total:
-            users = users_query.all()
+    if not query:
+        return respond([], False)
+
+    if current_app.elasticsearch:
+        try:
+            rows, total = User.search(query, page, per_page)
+            users = list(rows) if not isinstance(rows, list) else rows
             has_more = total > page * per_page
+            return respond(users, has_more)
+        except Exception:
+            current_app.logger.exception('Elasticsearch error in search_user; falling back to DB')
 
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                html = render_template('_users_list.html', users=users, form=EmptyForm())
-                return jsonify({'html': html, 'has_more': has_more})
-
-            return render_template('search.html', title='Search', form=form, results=users, query=query, has_more=has_more)
-    except Exception:
-        current_app.logger.exception('Elasticsearch error in search_user; falling back to DB')
-
-    stmt = sa.select(User).join(Profile).where(
-        sa.or_(
-            User.username.ilike(f'%{query}%'),
-            Profile.public_id.ilike(f'%{query}%')
-        )
-    )
+    stmt = (sa.select(User)
+            .join(Profile)
+            .where(sa.or_(
+                User.username.ilike(f'%{query}%'),
+                Profile.public_id.ilike(f'%{query}%')
+            )))
     users, has_more = pg(stmt, page)
-
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        html = render_template('_users_list.html', users=users, form=EmptyForm())
-        return jsonify({'html': html, 'has_more': has_more})
-
-    return render_template('search.html', title='Search', form=form, results=users, query=query, has_more=has_more)
+    return respond(users, has_more)
 
 @bp.route('/friends', methods=['GET', 'POST'])
 @login_required
@@ -242,48 +239,16 @@ def friends():
 
     query = request.args.get('q', '', type=str)
     page = request.args.get('page', 1, type=int)
-    per_page = current_app.config['USERS_PER_PAGE']
 
     if view == 'friends':
-        base_stmt = current_user.friends.select().join(Profile)
+        stmt = current_user.friends.select().join(Profile)
     elif view == 'outgoing':
-        base_stmt = current_user.sent_requests.select().join(Profile)
+        stmt = current_user.sent_requests.select().join(Profile)
     elif view == 'incoming':
-        base_stmt = current_user.received_requests.select().join(Profile)
+        stmt = current_user.received_requests.select().join(Profile)
     else:
-        base_stmt = current_user.friends.select().join(Profile)
+        stmt = current_user.friends.select().join(Profile)
 
-    if query:
-        try:
-            size_cap = min(per_page * page * 5, 1000)
-            ids, _ = query_index(User.__tablename__, query, 1, size_cap)
-
-            rel_ids = set(db.session.scalars(base_stmt.with_only_columns(User.id)).all())
-            filtered = [uid for uid in ids if uid in rel_ids]
-
-            start = (page - 1) * per_page
-            end = start + per_page
-            page_ids = filtered[start:end]
-            has_more = len(filtered) > end
-
-            users = []
-            if page_ids:
-                when = [(page_ids[i], i) for i in range(len(page_ids))]
-                users = db.session.execute(
-                    sa.select(User).join(Profile)
-                    .where(User.id.in_(page_ids))
-                    .order_by(db.case(*when, value=User.id))
-                ).scalars().all()
-
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                html = render_template('_users_list.html', users=users, form=EmptyForm())
-                return jsonify({'html': html, 'has_more': has_more})
-
-            return render_template('friends.html', title='Friends', form=form, users=users, view=view, query=query, has_more=has_more)
-        except Exception:
-            current_app.logger.exception('Elasticsearch error in friends; falling back to DB')
-
-    stmt = base_stmt
     if query:
         stmt = stmt.where(
             sa.or_(
@@ -291,7 +256,7 @@ def friends():
                 Profile.public_id.ilike(f'%{query}%')
             )
         )
-    
+
     users, has_more = pg(stmt, page)
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':

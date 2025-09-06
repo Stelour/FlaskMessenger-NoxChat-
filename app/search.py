@@ -1,6 +1,5 @@
 from flask import current_app
 
-
 def add_to_index(index, model):
     if not current_app.elasticsearch:
         return
@@ -10,29 +9,30 @@ def add_to_index(index, model):
     except Exception:
         current_app.logger.exception('Elasticsearch indexing failed; skipping')
 
-
 def remove_from_index(index, model):
     if not current_app.elasticsearch:
         return
-    try:
-        current_app.elasticsearch.delete(index=index, id=model.id)
-    except Exception:
-        # ignore missing docs or transient delete issues during development
-        current_app.logger.debug('Elasticsearch delete skipped or failed silently')
-
+    current_app.elasticsearch.delete(index=index, id=model.id)
 
 def query_index(index, query, page, per_page):
     if not current_app.elasticsearch:
         return [], 0
     try:
+        es_query = {
+            'multi_match': {
+                'query': query,
+                'fields': ['*']
+            }
+        }
         search = current_app.elasticsearch.search(
             index=index,
-            query={'multi_match': {'query': query, 'fields': ['*']}},
+            query=es_query,
             from_=(page - 1) * per_page,
             size=per_page,
         )
         ids = [int(hit['_id']) for hit in search['hits']['hits']]
-        total = search['hits']['total']['value'] if 'hits' in search and 'total' in search['hits'] else 0
+        total_obj = search['hits'].get('total', {})
+        total = total_obj.get('value', 0) if isinstance(total_obj, dict) else total_obj
         return ids, total
     except Exception:
         current_app.logger.exception('Elasticsearch query failed; returning empty')
