@@ -8,7 +8,7 @@ from app.main.avatar_utils import save_avatar, rename_avatar_directory, clear_ol
 from app.main.updates import updates
 from app.main.forms import SearchUserForm, EditProfileForm, FriendsForm, EmptyForm
 from app.main import bp
-from app.search import query_index
+from app.search import add_to_index
 
 @bp.route('/')
 @bp.route('/index')
@@ -59,14 +59,15 @@ def edit_profile():
     if form.validate_on_submit():
         new_public_id = form.public_id.data.lower()
         old_public_id = current_user.profile.public_id
-        
-        if new_public_id != old_public_id:
+        did_public_id_change = new_public_id != old_public_id
+
+        if did_public_id_change:
             rename_avatar_directory(old_public_id, new_public_id)
             if current_user.profile.avatar_path and '/' in current_user.profile.avatar_path:
                 _, filename = current_user.profile.avatar_path.split('/', 1)
                 current_user.profile.avatar_path = f"{new_public_id}/{filename}"
             current_user.profile.public_id = new_public_id
-        
+
         current_user.username = form.username.data
         current_user.profile.bio = form.bio.data
 
@@ -74,8 +75,11 @@ def edit_profile():
             relative_path, new_filename = save_avatar(form.avatar.data, current_user.profile.public_id)
             current_user.profile.avatar_path = relative_path
             clear_old_avatars(current_user.profile.public_id, new_filename)
-            
+
         db.session.commit()
+        if did_public_id_change and current_app.elasticsearch:
+            add_to_index('user', current_user)
+
         flash('Your changes have been saved.')
         return redirect(url_for('main.edit_profile'))
     

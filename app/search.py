@@ -1,4 +1,5 @@
 from flask import current_app
+from elasticsearch import NotFoundError
 
 def add_to_index(index, model):
     if not current_app.elasticsearch:
@@ -12,7 +13,12 @@ def add_to_index(index, model):
 def remove_from_index(index, model):
     if not current_app.elasticsearch:
         return
-    current_app.elasticsearch.delete(index=index, id=model.id)
+    try:
+        current_app.elasticsearch.delete(index=index, id=model.id)
+    except NotFoundError:
+        return
+    except Exception:
+        current_app.logger.exception('Elasticsearch delete failed; skipping')
 
 def query_index(index, query, page, per_page):
     if not current_app.elasticsearch:
@@ -21,7 +27,7 @@ def query_index(index, query, page, per_page):
         es_query = {
             'multi_match': {
                 'query': query,
-                'fields': ['*']
+                'fields': ['username^2', 'public_id']
             }
         }
         search = current_app.elasticsearch.search(

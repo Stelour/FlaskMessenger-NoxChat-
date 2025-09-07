@@ -8,6 +8,8 @@ from app.auth.forms import LoginForm, RegistrationForm, \
     ResetPasswordRequestForm, ResetPasswordForm
 from app.models import User, Profile
 from app.auth.email import send_password_reset_email
+from flask import current_app
+from app.search import add_to_index
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -50,17 +52,28 @@ def logout():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
+
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
+
         profile = Profile(bio="No bio yet")
         profile.user = user
-        db.session.add(user)
-        db.session.commit()
+
+        db.session.add_all([user, profile])
+        db.session.flush()
+
         profile.public_id = f'{user.username.lower()}_{user.id}'
+
         db.session.commit()
         
+        if current_app.elasticsearch:
+            try:
+                add_to_index('user', user)
+            except Exception:
+                current_app.logger.exception('Elasticsearch post-commit index failed; skipping')
+
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', title='Register', form=form)
