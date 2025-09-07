@@ -35,5 +35,5 @@ def query_index(index, query, page, per_page):
         total = total_obj.get('value', 0) if isinstance(total_obj, dict) else total_obj
         return ids, total
     except Exception:
-        current_app.logger.exception('Elasticsearch query failed; returning empty')
-        return [], 0
+        current_app.logger.exception('Elasticsearch query failed; falling back to DB')
+        raise
